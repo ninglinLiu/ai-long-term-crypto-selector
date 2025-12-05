@@ -2,7 +2,13 @@
 
 🚀 一个基于 AI 的长期加密货币选币管家，支持因子分析、组合建议和 AI 解读。
 
-> ⚠️ **重要提示**：本项目仅供技术研究和学习使用，不构成任何投资建议。请查看 [风险声明](./RISK_DISCLOSURE.md) 了解详细信息。
+> ⚠️ **重要提示**：本项目仅供技术研究和学习使用，不构成任何投资建议。- 虚拟货币相关业务活动在中国属于非法金融活动
+- 本项目反对虚拟货币炒作，仅供技术学习研究请查看 [风险声明](./RISK_DISCLOSURE.md) 了解详细信息。
+
+
+<img width="2051" height="902" alt="image" src="https://github.com/user-attachments/assets/330d5717-1d8a-4c0c-9b2b-4fd380096fd0" />
+
+<img width="2170" height="853" alt="image" src="https://github.com/user-attachments/assets/92ba6c4c-b1cb-462e-8d34-607bb68d2ff3" />
 
 ## 项目定位
 
