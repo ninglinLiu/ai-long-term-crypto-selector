@@ -127,3 +127,11 @@ pnpm daily
 2. **手动触发**：所有任务都是手动触发，不包含自动定时调度
 3. **DeepSeek API**：使用 DeepSeek API 而非 OpenAI，需要配置 `DEEPSEEK_API_KEY`
 
+## ⚠️ 风险声明
+
+**本项目仅供技术研究和学习使用，不构成任何投资建议。**
+
+- 虚拟货币相关业务活动在中国属于非法金融活动
+- 本项目反对虚拟货币炒作，仅供技术学习研究
+- 详细风险声明请查看：[RISK_DISCLOSURE.md](./RISK_DISCLOSURE.md)
+
