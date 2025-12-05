@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 资产表：存储白名单资产的基本信息
+model Asset {
+  id            String   @id @default(cuid())
+  name          String   // 资产名称，如 "Bitcoin"
+  symbol        String   @unique // 资产符号，如 "BTC"（大写）
+  assetClass    String   // 资产类别：crypto | us_equity | cn_equity
+  dataSourceId  String   // 数据源中的 ID，如 CoinGecko 的 "bitcoin"
+  exchange      String?  // 交易所（可选，crypto 可能不需要）
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 关联关系
+  dailyMarketData     DailyMarketData[]
+  factorSnapshots     FactorSnapshot[]
+  portfolioSuggestions PortfolioSuggestion[]
+
+  @@index([symbol])
+  @@index([assetClass])
+}
+
+// 日线市场数据表：存储每日的价格、市值、成交量等
+model DailyMarketData {
+  id          String   @id @default(cuid())
+  assetId     String
+  date        DateTime // 日期（只保留日期部分，时间设为 00:00:00）
+  price       Float    // 收盘价/最新价
+  marketCap   Float?   // 市值（Market Cap）
+  volume      Float?   // 24h 成交量
+  fdv         Float?   // Fully Diluted Valuation
+  high        Float?   // 当日最高价
+  low         Float?   // 当日最低价
+  open        Float?   // 开盘价
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  asset       Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  // 确保同一资产同一天只有一条记录
+  @@unique([assetId, date])
+  @@index([assetId, date])
+  @@index([date])
+}
+
+// 因子快照表：存储每个资产在某个日期的因子得分
+model FactorSnapshot {
+  id              String   @id @default(cuid())
+  assetId         String
+  date            DateTime // 计算因子的日期
+  // 估值因子得分 (0-5)
+  valuationScore  Float
+  // 动量因子得分 (0-5)
+  momentumScore   Float
+  // 流动性因子得分 (0-5)
+  liquidityScore  Float
+  // 风险因子得分 (0-5，风险越低得分越高)
+  riskScore       Float
+  // 总分 (0-5)
+  totalScore      Float
+  // 原始因子值（JSON 存储，便于调试和扩展）
+  rawFactors      String?  // JSON 字符串，存储原始计算的因子值
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  asset           Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  // 确保同一资产同一天只有一条因子快照
+  @@unique([assetId, date])
+  @@index([assetId, date])
+  @@index([date])
+}
+
+// 组合建议表：存储每个资产在某个日期的目标权重建议
+model PortfolioSuggestion {
+  id          String   @id @default(cuid())
+  assetId     String
+  date        DateTime // 生成建议的日期
+  targetWeight Float   // 目标权重（0-1，如 0.04 表示 4%）
+  notes       String?  // 备注（可选，可存储 AI 分析的简要摘要）
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  asset       Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  // 确保同一资产同一天只有一条建议
+  @@unique([assetId, date])
+  @@index([assetId, date])
+  @@index([date])
+}
+
+
+
+
