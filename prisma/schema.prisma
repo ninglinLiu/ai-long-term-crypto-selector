@@ -25,6 +25,7 @@ model Asset {
   dailyMarketData     DailyMarketData[]
   factorSnapshots     FactorSnapshot[]
   portfolioSuggestions PortfolioSuggestion[]
+  technicalSignals    TechnicalSignal[]
 
   @@index([symbol])
   @@index([assetClass])
@@ -98,6 +99,41 @@ model PortfolioSuggestion {
   @@index([assetId, date])
   @@index([date])
 }
+
+// 技术面信号表：存储技术分析信号
+model TechnicalSignal {
+  id              String   @id @default(cuid())
+  assetId         String
+  timeframe       String   // 时间周期：'1h' | '4h' | '1d'
+  signalType      String   // 信号类型：'cluster_breakout_up' | 'cluster_breakout_down' | 'retest_long' | 'retest_short'
+  direction       String   // 方向：'long' | 'short'
+  source          String   // 信号来源：'cluster_breakout' | 'retest'
+  densityScore    Float    // 密集度评分 (0-1)
+  breakoutScore   Float?   // 突破力度评分 (0-1)，回踩信号可能为空
+  retestScore     Float?   // 回踩评分 (0-1)，仅回踩信号有值
+  signalScore     Float    // 综合评分 (0-1)
+  breakoutBarTime DateTime // 突破/回踩 K 线时间
+  entryPrice      Float    // 入场价格
+  stopLoss        Float    // 止损价格
+  takeProfit1     Float    // 第一止盈位
+  takeProfit2     Float    // 第二止盈位
+  clusterMean     Float    // 均线密集区均值
+  clusterHigh     Float    // 均线密集区上沿
+  clusterLow      Float    // 均线密集区下沿
+  parentSignalId  String?  // 父信号 ID（回踩信号关联的突破信号）
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  extraJson       String?  // JSON 字符串，存储额外信息
+
+  asset           Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId, timeframe])
+  @@index([timeframe])
+  @@index([signalScore])
+  @@index([createdAt])
+}
+
+
 
 
 

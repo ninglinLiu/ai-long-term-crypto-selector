@@ -23,12 +23,24 @@ async function getAssetData(id: string) {
   return res.json();
 }
 
+async function getTechnicalSignals(assetId: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const res = await fetch(`${baseUrl}/api/technical-signals?assetId=${assetId}&limit=10`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    return [];
+  }
+  return res.json();
+}
+
 export default async function AssetDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
   const asset = await getAssetData(params.id);
+  const technicalSignals = asset ? await getTechnicalSignals(asset.id) : [];
 
   if (!asset) {
     return (
@@ -156,6 +168,80 @@ export default async function AssetDetailPage({
                 </Card>
               )}
             </div>
+
+            {technicalSignals.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>最新技术面信号</CardTitle>
+                  <CardDescription>
+                    ⚠️ 仅作为辅助决策工具，建议结合长期因子和风险偏好使用
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {technicalSignals.map((signal: any) => {
+                      const strengthColors: Record<string, string> = {
+                        strong: 'bg-green-100 text-green-800',
+                        medium: 'bg-yellow-100 text-yellow-800',
+                        weak: 'bg-orange-100 text-orange-800',
+                        very_weak: 'bg-gray-100 text-gray-800',
+                      };
+                      const directionColors: Record<string, string> = {
+                        long: 'text-green-600',
+                        short: 'text-red-600',
+                      };
+                      return (
+                        <div key={signal.id} className="border rounded-lg p-4 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">{signal.timeframe}</span>
+                              <span className={`${directionColors[signal.direction]}`}>
+                                {signal.direction === 'long' ? '做多' : '做空'}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {signal.signalType === 'cluster_breakout_up' && '向上突破'}
+                                {signal.signalType === 'cluster_breakout_down' && '向下突破'}
+                                {signal.signalType === 'retest_long' && '多头回踩'}
+                                {signal.signalType === 'retest_short' && '空头回顶'}
+                              </span>
+                            </div>
+                            <span className={`px-2 py-1 rounded text-xs font-semibold ${strengthColors[signal.strength]}`}>
+                              {signal.strength === 'strong' && '强'}
+                              {signal.strength === 'medium' && '中'}
+                              {signal.strength === 'weak' && '弱'}
+                              {signal.strength === 'very_weak' && '很弱'}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">入场价: </span>
+                              <span className="font-semibold">${signal.entryPrice.toFixed(4)}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">止损: </span>
+                              <span className="font-semibold">${signal.stopLoss.toFixed(4)}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">TP1: </span>
+                              <span className="font-semibold">${signal.takeProfit1.toFixed(4)}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">TP2: </span>
+                              <span className="font-semibold">${signal.takeProfit2.toFixed(4)}</span>
+                            </div>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            评分: {signal.signalScore.toFixed(2)} | 
+                            信号时间: {new Date(signal.breakoutBarTime).toLocaleString('zh-CN')} | 
+                            更新时间: {new Date(signal.updatedAt).toLocaleString('zh-CN')}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="chart" className="space-y-4">
@@ -296,6 +382,8 @@ export default async function AssetDetailPage({
     </div>
   );
 }
+
+
 
 
 

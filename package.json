@@ -13,6 +13,7 @@
     "update-data": "tsx scripts/updateData.ts",
     "recompute-factors": "tsx scripts/recomputeFactors.ts",
     "generate-report": "tsx scripts/generateReport.ts",
+    "scan-ta": "tsx scripts/scanTaSignals.ts",
     "daily": "pnpm update-data && pnpm recompute-factors && pnpm generate-report"
   },
   "dependencies": {
@@ -54,4 +55,6 @@
     "typescript": "^5.5.4"
   }
 }
+
+
 

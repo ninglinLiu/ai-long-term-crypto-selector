@@ -31,9 +31,21 @@ async function getPortfolio() {
   return res.json();
 }
 
+async function getTechnicalSignals() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const res = await fetch(`${baseUrl}/api/technical-signals?limit=50`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    return [];
+  }
+  return res.json();
+}
+
 export default async function Home() {
   const assets = await getAssets();
   const portfolio = await getPortfolio();
+  const technicalSignals = await getTechnicalSignals();
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,6 +59,7 @@ export default async function Home() {
           <TabsList>
             <TabsTrigger value="assets">资产池</TabsTrigger>
             <TabsTrigger value="portfolio">组合建议</TabsTrigger>
+            <TabsTrigger value="technical">技术面信号</TabsTrigger>
           </TabsList>
 
           <TabsContent value="assets" className="space-y-4">
@@ -211,6 +224,99 @@ export default async function Home() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="technical" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>最新技术面信号</CardTitle>
+                <CardDescription>
+                  ⚠️ 仅作为辅助决策工具，建议结合长期因子和风险偏好使用。不作为自动下单或任何保证盈利的信号。
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {technicalSignals.length === 0 ? (
+                  <p className="text-center text-muted-foreground">
+                    暂无技术面信号，请先运行 <code className="bg-muted px-2 py-1 rounded">pnpm scan-ta</code>
+                  </p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>资产</TableHead>
+                        <TableHead>周期</TableHead>
+                        <TableHead>方向</TableHead>
+                        <TableHead>信号类型</TableHead>
+                        <TableHead>入场价</TableHead>
+                        <TableHead>止损</TableHead>
+                        <TableHead>TP1</TableHead>
+                        <TableHead>TP2</TableHead>
+                        <TableHead>评分</TableHead>
+                        <TableHead>强度</TableHead>
+                        <TableHead>时间</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {technicalSignals.map((signal: any) => {
+                        const strengthColors: Record<string, string> = {
+                          strong: 'text-green-600 font-semibold',
+                          medium: 'text-yellow-600',
+                          weak: 'text-orange-600',
+                          very_weak: 'text-gray-500',
+                        };
+                        const directionColors: Record<string, string> = {
+                          long: 'text-green-600',
+                          short: 'text-red-600',
+                        };
+                        return (
+                          <TableRow key={signal.id}>
+                            <TableCell className="font-medium">
+                              <div>
+                                <div className="font-semibold">{signal.assetSymbol}</div>
+                                <div className="text-sm text-muted-foreground">{signal.assetName}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>{signal.timeframe}</TableCell>
+                            <TableCell>
+                              <span className={directionColors[signal.direction]}>
+                                {signal.direction === 'long' ? '做多' : '做空'}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-xs">
+                                {signal.signalType === 'cluster_breakout_up' && '向上突破'}
+                                {signal.signalType === 'cluster_breakout_down' && '向下突破'}
+                                {signal.signalType === 'retest_long' && '多头回踩'}
+                                {signal.signalType === 'retest_short' && '空头回顶'}
+                              </span>
+                            </TableCell>
+                            <TableCell>${signal.entryPrice.toFixed(4)}</TableCell>
+                            <TableCell>${signal.stopLoss.toFixed(4)}</TableCell>
+                            <TableCell>${signal.takeProfit1.toFixed(4)}</TableCell>
+                            <TableCell>${signal.takeProfit2.toFixed(4)}</TableCell>
+                            <TableCell>{signal.signalScore.toFixed(2)}</TableCell>
+                            <TableCell>
+                              <span className={strengthColors[signal.strength]}>
+                                {signal.strength === 'strong' && '强'}
+                                {signal.strength === 'medium' && '中'}
+                                {signal.strength === 'weak' && '弱'}
+                                {signal.strength === 'very_weak' && '很弱'}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              <div>
+                                <div>信号: {new Date(signal.breakoutBarTime).toLocaleString('zh-CN')}</div>
+                                <div className="text-xs">更新: {new Date(signal.updatedAt).toLocaleString('zh-CN')}</div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
